@@ -30,7 +30,7 @@ echo "==========  Start Or Stop Services =========="
 read -p "Would you like to start or stop a service (start or stop): " startOrStop
 
 #asking for which  service
-read -p "Please enter a service you'd like to $startOrStop: " service 
+read -p "Please enter a service you'd like to $startOrStop: " service
 
 #checking if the user entered start
 if [ "$startOrStop" == "start" ]; then
@@ -83,7 +83,7 @@ while true;do
 	*)
 	 echo "Invaild option"
 	;;
-	esac
+  esac
 done
 }
 

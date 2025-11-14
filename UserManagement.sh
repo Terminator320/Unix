@@ -1,5 +1,3 @@
-#create user
-
 userChecker(){
 if id "$1" &>/dev/null
 then
@@ -14,6 +12,7 @@ fi
 createUser(){
 read -p "Enter a username" username
 
+#check if the user exists
 if id "$username" &>/dev/null; then
    echo "User already exists."
 else
@@ -56,14 +55,14 @@ read -p "PLease enter a user you'd want to delete: " user
   if id $user $>dev/null;then
 
   	#double checking if they want to delete the user
-	read -p "Are you sure you want to delete the user: $user ?   (Y/N): " answer
+	read -p "Are you sure you want to delete the user: $user ?   (y/n): " answer
 
 	#if yes delete the user
-	if [ "$answer" == "Y" ]; then
+	if [ "$answer" == "y" ]; then
 	    userdel -r $user
 	    echo "$user has been deleted succesfully."
 	#if no do not delete the user
-	elif [ "$answer" == "N" ]; then
+	elif [ "$answer" == "n" ]; then
 	    echo "$user will not be deleted."
 	else
 	  echo "Invaild input."
@@ -79,7 +78,9 @@ who
 }
 
 #disconnect a remote user
-
+killRemote(){
+  echo "Not done"
+}
 
 
 groupsUser(){
@@ -89,7 +90,7 @@ getent group | grep $user | cut -f1 -d:
 
 }
 groupSudo(){
-
+  echo "ASk teacher"
 }
 
 #user management menu
@@ -118,16 +119,16 @@ while true;do
 	  deleteUser
 	;;
 	4)
-	  displayUser
+	  displayUsers
 	;;
 	5)
-
+	  killRemote
 	;;
 	6)
-
+	  groupUsers
 	;;
 	7)
-
+	  groupSudo
 	;;
 	8)
 	 echo "End program..."
@@ -139,3 +140,6 @@ while true;do
   esac
 done 
 }
+
+
+UserManagement
