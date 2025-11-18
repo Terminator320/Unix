@@ -83,7 +83,6 @@ while true;do
 	*)
 	 echo "Invaild option"
 	;;
-  esac
 done
 }
 

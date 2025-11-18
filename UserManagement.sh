@@ -1,10 +1,9 @@
 userChecker(){
-if id "$1" &>/dev/null
-then
-echo "User exists. Continuing"
+if id "$1" &>/dev/null;then
+   echo "User exists. Continuing"
 else
-echo "User does not exist. Exiting"
-return 1
+   echo "User does not exist. Exiting"
+   return 1
 fi
 }
 
@@ -23,7 +22,7 @@ else
      echo "Password not vailde. Please try again."
      sudo passwd $username
   done
-  echo "A new user has been created."
+  echo "A new user has been create"
 fi
 }
 
@@ -52,25 +51,24 @@ deleteUser() {
 
 read -p "PLease enter a user you'd want to delete: " user
   #check if the user exists or not
-  if id $user $>dev/null;then
-
-  	#double checking if they want to delete the user
-	read -p "Are you sure you want to delete the user: $user ?   (y/n): " answer
-
-	#if yes delete the user
-	if [ "$answer" == "y" ]; then
-	    userdel -r $user
-	    echo "$user has been deleted succesfully."
-	#if no do not delete the user
-	elif [ "$answer" == "n" ]; then
-	    echo "$user will not be deleted."
-	else
-	  echo "Invaild input."
-	fi
+  if id $user $>dev/null; then
+  #double checking if they want to delete the user
+  read -p "Are you sure you want to delete the user: $user ?   (y/n): " answer
+    #id yes then delete the user
+    if [ "$answer" == "y" ]; then
+       sudo userdel $user
+       echo "$user has been deleted succesfully."
+    #if no do not delete the user
+    elif [ "$answer" == "n" ]; then
+       echo "$user will not be deleted."
+    else
+       echo "Invaild input."
+    fi
   else
-	echo "$user doesn't exists."
-fi
+    echo "$user doesn't exists."
+  fi
 }
+
 
 #display all user 
 displayUsers(){
@@ -87,7 +85,6 @@ groupsUser(){
 read -p "Enter a username you want to display all groups for" user
 userChecker $user
 getent group | grep $user | cut -f1 -d:
-
 }
 groupSudo(){
   echo "ASk teacher"
@@ -125,7 +122,7 @@ while true;do
 	  killRemote
 	;;
 	6)
-	  groupUsers
+	  groupsUser
 	;;
 	7)
 	  groupSudo

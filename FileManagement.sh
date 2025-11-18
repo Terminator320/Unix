@@ -11,7 +11,7 @@ get_input(){
 read -p "Enter an username" username
 userChecker $username
 read -p "Enter a filename" fileName
-file_path=$(find "/home/$username" -name $fileName -print)
+file_path=$(find "/home/$username" -name $fileName)
 if [ -n "$file_path" ]
 then
 echo "$file_path"
@@ -42,13 +42,9 @@ OldestFiles)
 display_old
 ;;
 Exit)
-return 1
+exit 1
 ;;
 *) echo "Enter a valid one"
 ;;
 esac
 done
-
-get_input
-display_large
-display_old
