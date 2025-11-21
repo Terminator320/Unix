@@ -95,7 +95,7 @@ if [ "$startOrStop" == "start" ]; then
   read -p "Are you sure you want to start: $service? (y/n):  " answer
     if [ "$answer" == "y" ]; then
         #starting service
-        systemctl start $service
+        sudo systemctl start $service
         confirmation $service
    else
         echo "$server will not start."
@@ -105,7 +105,7 @@ elif [ "$startOrStop" == "stop" ]; then
   read -p "Are you sure you want to stop: $service ? (y/n): " ans
   if [ "$ans" == "y" ]; then
         #stopping service 
-        systemctl stop $service
+        sudo systemctl stop $service
         confirmation $service
   else
     echo "$service will not be stop"
@@ -153,32 +153,36 @@ done
 #--------------------------------------User Management--------------------------------------
 #create new user
 createUser(){
-read -p "Enter a username" username
+  echo " "
+  echo "============================  Creating Users  ============================"
+  read -p "Enter a username: " username
 
-#check if the user exists
-if id "$username" &>/dev/null; then
-   echo "User already exists."
-else
-  sudo useradd $username
-  sudo passwd $username 
-#checking if the user inputed a password
-  while passwd $username $? -eq 0; do
-     echo "Password not vailde. Please try again."
-     sudo passwd $username
-  done
-  echo "A new user has been created."
-fi
+  #check if the user exists
+  if id "$username" &>/dev/null; then
+     echo "User already exists."
+  else
+    sudo useradd $username
+    sudo passwd $username
+     #checking if the user inputed a password
+     while passwd $username $? -eq 0; do
+       echo "Password not vailde. Please try again."
+       sudo passwd $username
+     done
+    echo "A new user has been created."
+  fi
 }
 
-#root permission 
+#root permission
 rootPerm(){
+echo " "
+echo "============================ Grant Root Premission  ============================"
 #showing the user all the users sp they can pick
   echo "Here are a list of all users: "
-  cut -d: -f1 /etc/passwd
+  cut -d: -f1 | xargs -n 5 printf "%s\t%s\t%s\t%s\t%s\n" /etc/passwd
 
   read -p "PLease enter a user you'd want to give root permission: " user
   #check if the user exists or not
-  if id $user $>dev/null;then
+  if id "$user" $>dev/null;then
     #adding root perms to the user 
     sudo usermod -aG root $user
     echo "The user $user now has root permission."
@@ -190,13 +194,15 @@ fi
 
 #Deleting a user
 deleteUser() {
+echo " "
+echo "============================  Deleting Users  ============================"
 #showing the user all the users so they can pick
   echo "Here are a list of all users: "
   cut -d: -f1 /etc/passwd
 
 read -p "PLease enter a user you'd want to delete: " user
   #check if the user exists or not
-  if id $user $>dev/null; then
+  if id "$user" &>/dev/null;then
   #double checking if they want to delete the user
   read -p "Are you sure you want to delete the user: $user ?   (y/n): " answer
     #id yes then delete the user
@@ -216,47 +222,175 @@ read -p "PLease enter a user you'd want to delete: " user
 
 #display user
 displayUsers(){
+echo " "
+echo "============================  All Usesrs  ============================"
 who | awk '{print $1}'
 }
 
 #disconnect a remote user
 killRemote(){
-  echo "Not done"
+  echo " "
+  echo "==============================  Disconnecting Remote Users  =============================="
+  echo "All remote user"
+  who | grep tty | awk '{print $1,$2}'
+
+  read -p "Which user do you want to disconnect: " user
+
+#checking if user exists
+   if id "$user" &>/dev/null; then
+	#making user input the users tty
+        read -p "Please enter $user TTY: " tty
+
+        #gettting all tty for all users
+        allTTY=$(who | grep tty |awk '{print $2}')
+
+        #checking if the tty is vailded
+        if echo "$allTTY" | grep -qx "$tty" ; then
+	   #double checking if they want to disconncet the user
+            read -p "Are you sure you want to disconnect $user: (y/n) ? " ans
+                if [ "$ans" == "y" ]; then
+                    echo "$user disconnected."
+                    sudo pkill -HUP -t $tty
+                elif [ "$ans" == "n" ]; then
+                    echo "$user will not be disconnected."
+                else
+                    echo "Invaild option."
+                fi
+        else
+           echo "Invaild TTY."
+	   echo "All Remote User with their TTY: "
+           who | grep tty | awk '{print $1,$2}'
+
+        fi
+  else
+    echo "User does not exits."
+  fi
 }
 
 
 #show all groups for a user
 groupsUser(){
+echo " "
+echo "=======================  Groups Users  =================" 
 #showing the user all the users so they can pick
   echo "Here are a list of all users: "
   cut -d: -f1 /etc/passwd
 
-#asking for the user 
+#asking for the user
   read -p "Enter a username you want to display all groups for: " user
 
-#using method to check if user exist
-  userChecker $user
-
-#getting all group then only displaying the name of the group
-  getent group | grep $user | cut -f1 -d:
+#check if user exist
+  if id "user" &>/dev/null;then
+    #getting all group then only displaying the name of the group
+    getent group | grep $user | cut -f1 -d:
+  else
+    echo "User does not exits."
+  fi
 }
 
 
-#chcking method
-userChecker(){
-if id "$1" &>/dev/null;then
-   echo "User exists. Continuing.........."
-else
-   echo "User does not exist. Exiting.........."
-   return 1
-fi
+#method to add a user to a group
+addGroup(){
+echo " "
+echo "====================================  Adding User to a group  ===================================="
+#show all groups
+echo "Here are a list of all groups: "
+cut -f1 -d":" /etc/group
+
+#ask user for group
+  read -p "Enter a group you'd like the user to join: " group
+
+
+#check if group exists
+  if getent group "$group" >/dev/null 2>&1; then
+  #ask for the user and check if the user exists
+    read -p "Enter the user: " user
+    if id "$user" &>/dev/null;then
+        read -p "Are you sure you want to add $user to group: $group : (y/n) ?" ans
+           if [ "$ans" == "y" ]; then
+                sudo usermod -aG $group $user
+                echo "$user has been added to $group."
+           elif [ "$ans" == "n" ]; then
+                 echo "$user will not be added to the group."
+           else
+                echo "Invaild option."
+           fi
+    else
+        echo "$user does not exist."
+    fi
+  else
+        echo "$group doesn't exist."
+  fi
 }
+
+#remove a user from a group
+removeGroup(){
+echo " "
+echo "====================================  Removing User from a group  ===================================="
+#show all groups
+echo "Here are a list of all groups: "
+cut -f1 -d":" /etc/group
+
+
+#ask user for which group
+ read -p "Enter a the group you want to remove user from: " group
+
+#check if group exists
+ if getent group "$group" >/dev/null 2>&1; then
+   #ask for the user and check if the user exists
+    read -p "Enter the user: " user
+    if id "$user" &>/dev/null;then
+	#double check if they want to remove the user
+        read -p "Are you sure you want to remove $user from the group: $group : (y/n) ?" ans
+           if [ "$ans" == "y" ]; then
+                sudo gpasswd -d $user $group
+                echo "$user has been removed from $group."
+           elif [ "$ans" == "n" ]; then
+                 echo "$user will not be removed from the group."
+           else
+                echo "Invaild option."
+           fi
+    else
+        echo "$user does not exist."
+    fi
+  else
+        echo "$group doesn't exist."
+  fi
+}
+
 
 
 #change a user's group membership
 groupSudo(){
-  echo "Ask teacher"
+ echo " "
+ echo "=====================================================  Change a user’s group membership  ====================================================="
+ echo "1) Add to a new group"
+ echo "2) Remove from a group"
+ echo "3) Back to main menu"
+ echo "4) Exit program"
+
+ read -p "Select an option [1-4]: " opt
+
+ case $opt in
+        1)
+          addGroup
+        ;;
+        2)
+          removeGroup
+        ;;
+        3)
+          echo "Returning to Main Menu"
+          MainMenu
+	;;
+        4)
+         exit 1
+        ;;
+        *)
+         echo "Invaild option."
+        ;;
+  esac
 }
+
 
 
 #user management menu
@@ -277,7 +411,7 @@ while true;do
 
   read -p "Select an option  [1-9]: " option
 
-  case $option in 
+  case $option in
         1)
           createUser
         ;;
@@ -298,7 +432,6 @@ while true;do
         ;;
         7)
           groupSudo
-	  echo "In devplomenple"
         ;;
 	8)
 	  echo "Returning to Main Menu"
