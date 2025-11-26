@@ -104,7 +104,7 @@ elif [ "$startOrStop" == "stop" ]; then
   #double check if user wants to stop the service
   read -p "Are you sure you want to stop: $service ? (y/n): " ans
   if [ "$ans" == "y" ]; then
-        #stopping service 
+        #stopping service
         sudo systemctl stop $service
         confirmation $service
   else
@@ -161,16 +161,12 @@ createUser(){
   if id "$username" &>/dev/null; then
      echo "User already exists."
   else
-    sudo useradd $username
+    sudo useradd -m $username
     sudo passwd $username
-     #checking if the user inputed a password
-     while passwd $username $? -eq 0; do
-       echo "Password not vailde. Please try again."
-       sudo passwd $username
-     done
-    echo "A new user has been created."
+    echo "A new user ($username) has been created."
   fi
 }
+
 
 #root permission
 rootPerm(){
@@ -178,15 +174,23 @@ echo " "
 echo "============================ Grant Root Premission  ============================"
 #showing the user all the users sp they can pick
   echo "Here are a list of all users: "
-  cut -d: -f1 | xargs -n 5 printf "%s\t%s\t%s\t%s\t%s\n" /etc/passwd
+  formatOut=$(cut -d: -f1 /etc/passwd | pr -t -a -4)
+  echo "$formatOut"
 
   read -p "PLease enter a user you'd want to give root permission: " user
   #check if the user exists or not
-  if id "$user" $>dev/null;then
-    #adding root perms to the user 
-    sudo usermod -aG root $user
-    echo "The user $user now has root permission."
-  else
+  if id "$user" &>/dev/null;then
+    read -p "Are you sure you want to give $user root premisson? (y/n) " ans
+	if [ "$ans" == "y" ]; then 
+    	   #adding root perms to the user
+    	   sudo usermod -aG root $user
+	   echo "The user $user now has root permission."
+	 elif [ "$ans" == "n" ]; then
+	   echo "$user will not be given root permission."
+	else
+	  echo "Invailed option."
+	fi
+    else
     echo "The user $user does not exists"
 fi
 }
@@ -198,7 +202,8 @@ echo " "
 echo "============================  Deleting Users  ============================"
 #showing the user all the users so they can pick
   echo "Here are a list of all users: "
-  cut -d: -f1 /etc/passwd
+  formatOut=$(cut -d: -f1 /etc/passwd | pr -t -a -4)
+  echo "$formatOut"
 
 read -p "PLease enter a user you'd want to delete: " user
   #check if the user exists or not
@@ -207,7 +212,8 @@ read -p "PLease enter a user you'd want to delete: " user
   read -p "Are you sure you want to delete the user: $user ?   (y/n): " answer
     #id yes then delete the user
     if [ "$answer" == "y" ]; then
-       sudo userdel $user
+        sudo usermod -G "" $user #clearing the users secondary groups if any
+	sudo userdel $user
        echo "$user has been deleted succesfully."
     #if no do not delete the user
     elif [ "$answer" == "n" ]; then
@@ -224,14 +230,14 @@ read -p "PLease enter a user you'd want to delete: " user
 displayUsers(){
 echo " "
 echo "============================  All Usesrs  ============================"
-who | awk '{print $1}'
+ who
 }
 
 #disconnect a remote user
 killRemote(){
   echo " "
   echo "==============================  Disconnecting Remote Users  =============================="
-  echo "All remote user"
+  echo "All remote user: "
   who | grep tty | awk '{print $1,$2}'
 
   read -p "Which user do you want to disconnect: " user
@@ -258,6 +264,7 @@ killRemote(){
                 fi
         else
            echo "Invaild TTY."
+	   echo " "
 	   echo "All Remote User with their TTY: "
            who | grep tty | awk '{print $1,$2}'
 
@@ -271,18 +278,20 @@ killRemote(){
 #show all groups for a user
 groupsUser(){
 echo " "
-echo "=======================  Groups Users  =================" 
+echo "=======================  Groups Users  ================="
 #showing the user all the users so they can pick
   echo "Here are a list of all users: "
-  cut -d: -f1 /etc/passwd
+  formatOut=$(cut -d: -f1 /etc/passwd | pr -t -a -4)
+  echo "$formatOut"
 
 #asking for the user
-  read -p "Enter a username you want to display all groups for: " user
+  read -p "Enter a username you want to see the groups they are in: " user
 
 #check if user exist
-  if id "user" &>/dev/null;then
+  if id "$user" &>/dev/null;then
+    echo "All groups $user are in: "
     #getting all group then only displaying the name of the group
-    getent group | grep $user | cut -f1 -d:
+    groups $user | cut -f2  -d:
   else
     echo "User does not exits."
   fi
@@ -291,85 +300,107 @@ echo "=======================  Groups Users  ================="
 
 #method to add a user to a group
 addGroup(){
-echo " "
-echo "====================================  Adding User to a group  ===================================="
-#show all groups
-echo "Here are a list of all groups: "
-cut -f1 -d":" /etc/group
+  echo " "
+  echo "====================================  Adding User to a group  ===================================="
 
-#ask user for group
-  read -p "Enter a group you'd like the user to join: " group
+  #show all users
+  echo "Here are a list of all users: "
+  formatOut=$(cut -d: -f1 /etc/passwd | pr -t -a -4)
+  echo "$formatOut"
 
+  #ask user for which user
+  read -p "Enter a the user you want to add to a group: " user
 
-#check if group exists
-  if getent group "$group" >/dev/null 2>&1; then
-  #ask for the user and check if the user exists
-    read -p "Enter the user: " user
-    if id "$user" &>/dev/null;then
-        read -p "Are you sure you want to add $user to group: $group : (y/n) ?" ans
-           if [ "$ans" == "y" ]; then
+   if id "$user" &>/dev/null;then
+      echo " " #spacing
+      #show all groups
+      echo "Here are a list of all groups: "
+      formatOutput=$(cut -f1 -d":" /etc/group | pr -t -a -4)
+      echo "$formatOutput"
+     echo " "
+
+      #ask user for group
+      read -p "Enter a group you'd like the user to join: " group
+
+      #check if group exists
+      if getent group "$group" >/dev/null 2>&1; then
+   	#double checking
+        read -p "Are you sure you want to add user $user to group: $group : (y/n) ? " ans
+           #if yes add the user to the group if not do not
+	   if [ "$ans" == "y" ]; then
                 sudo usermod -aG $group $user
-                echo "$user has been added to $group."
+                echo "$user has been added to $group group."
            elif [ "$ans" == "n" ]; then
                  echo "$user will not be added to the group."
            else
                 echo "Invaild option."
            fi
-    else
-        echo "$user does not exist."
-    fi
+      else
+        echo "$group does not exist."
+      fi
   else
-        echo "$group doesn't exist."
+        echo "$user doesn't exist."
   fi
 }
 
+
 #remove a user from a group
 removeGroup(){
-echo " "
-echo "====================================  Removing User from a group  ===================================="
-#show all groups
-echo "Here are a list of all groups: "
-cut -f1 -d":" /etc/group
+  echo " "
+  echo "====================================  Removing User from a group  ===================================="
+  #show all users
+  echo "Here are a list of all users: "
+  formatOut=$(cut -d: -f1 /etc/passwd | pr -t -a -4)
+  echo "$formatOut"
 
 
-#ask user for which group
- read -p "Enter a the group you want to remove user from: " group
 
-#check if group exists
- if getent group "$group" >/dev/null 2>&1; then
-   #ask for the user and check if the user exists
-    read -p "Enter the user: " user
-    if id "$user" &>/dev/null;then
-	#double check if they want to remove the user
-        read -p "Are you sure you want to remove $user from the group: $group : (y/n) ?" ans
+ #ask user for which user
+ read -p "Enter a the user you want to remove from a group: " user
+
+  if id "$user" &>/dev/null;then
+    #show the groups the are in
+    formatGroup=$(groups $user | cut -f2 -d:)
+    echo "All groups $user is in: "
+    echo "$formatGroup"
+
+    #ask for the group
+    read -p "Select the group you want to remove $user from: " group
+
+     #check if group exists
+     if getent group "$group" >/dev/null 2>&1; then
+
+    	#double check if they want to remove the user
+        read -p "Are you sure you want to remove $user from the $group : (y/n) ? " ans
            if [ "$ans" == "y" ]; then
                 sudo gpasswd -d $user $group
                 echo "$user has been removed from $group."
+		return
            elif [ "$ans" == "n" ]; then
                  echo "$user will not be removed from the group."
            else
                 echo "Invaild option."
            fi
     else
-        echo "$user does not exist."
+        echo "$group does not exist."
     fi
   else
-        echo "$group doesn't exist."
+        echo "$user doesn't exist."
   fi
 }
-
 
 
 #change a user's group membership
 groupSudo(){
  echo " "
- echo "=====================================================  Change a user’s group membership  ====================================================="
+ echo "====================================  Change a user’s group membership ====================================="
  echo "1) Add to a new group"
  echo "2) Remove from a group"
- echo "3) Back to main menu"
- echo "4) Exit program"
+ echo "3) Back to user management"
+ echo "4) Back to main menu"
+ echo "5) Exit program"
 
- read -p "Select an option [1-4]: " opt
+ read -p "Select an option [1-5]: " opt
 
  case $opt in
         1)
@@ -379,12 +410,16 @@ groupSudo(){
           removeGroup
         ;;
         3)
-          echo "Returning to Main Menu"
-          MainMenu
+          echo "Returning to user management"
+          UserManagement
 	;;
         4)
-         exit 1
+         echo "Returning to Main Menu"
+          MainMenu
         ;;
+	5)
+	  exit 1
+	;;
         *)
          echo "Invaild option."
         ;;
@@ -397,7 +432,7 @@ groupSudo(){
 UserManagement(){
 while true;do
   echo " "
-  echo "=====================================================  User Management  ================================================"
+  echo "=======================================  User Management ======================================="
   echo "1) Add a user"
   echo "2) Grant root permission to a user"
   echo "3) Delete a user"
