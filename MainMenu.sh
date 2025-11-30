@@ -335,7 +335,7 @@ addGroup(){
   #ask user for which user
   read -p "Enter a the user you want to add to a group: " user
 
-   if id "$user" &>/dev/nuThe function begins by asking for a username and confirms that the account exists using id "$username" &>/dev/null. If the user is valid, it retrieves their home directory with getent passwd. It then displays the 10 oldest files in that directory by running ls -ltr, which sorts files by modification time in ascending order. It filters out directories using grep -v d, takes the first 10 results with head -n 10, and prints only the filenames using awk '{print $9}'. If the username does not exist, the function prints an error message.ll;then
+   if id "$user" &>/dev/nul; then
       echo " " #spacing
       #show all groups
       echo "Here are a list of all groups: "
@@ -514,7 +514,7 @@ userAndFileCheck(){
   read -p "Enter an username: " username
 
   if id "$username" &>/dev/null;then
-    #geting the home home dict
+    #geting the home home directory
     User_Home=$(getent passwd "$username" | cut -d: -f6)
 
     #asking for the file name
