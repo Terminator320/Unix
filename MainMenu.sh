@@ -1,17 +1,18 @@
 #main menu
 MainMenu(){
-echo "=======================================  Main Menu  ======================================="
-echo " "
-echo "1) System Status"
-echo "2) Backup Management"
-echo "3) Network Management"
-echo "4) Service Management"
-echo "5) User Management"
-echo "6) File Management"
-echo "7) Exit Program"
+while true; do
+  echo "=======================================  Main Menu  ======================================="
+  echo " "
+  echo "1) System Status"
+  echo "2) Backup Management"
+  echo "3) Network Management"
+  echo "4) Service Management"
+  echo "5) User Management"
+  echo "6) File Management"
+  echo "7) Exit Program"
 
-read -p "Select an option [1-7]: " opt
-case $opt in
+  read -p "Select an option [1-7]: " opt
+  case $opt in
 	1)
 	  echo "In development"
 	;;
@@ -35,9 +36,10 @@ case $opt in
 	  exit 1
 	;;
 	*)
-	  echo "Invaild option"
+	  echo "Invalid option"
 	;;
-esac
+  esac
+done
 }
 
 
@@ -59,16 +61,16 @@ esac
 #------------------------------Service Management--------------------------------------
 #checking function
 confirmation(){
-#checking if its active or not
-check=$(systemctl status $1 | awk 'NR==3 {print $2}')
+  #checking if its active or not
+  check=$(systemctl status $1 | awk 'NR==3 {print $2}')
 
-#if its active user has started it
-if [ "$check" == "active" ];then
-  echo "You have started $1"
-#if its not active then user hasn't stop it
-else
-  echo "You have stop $1"
-fi
+  #if its active user has started it
+  if [ "$check" == "active" ];then
+     echo "You have started $1"
+  #if its not active then user hasn't stop it
+  else
+    echo "You have stopped $1"
+  fi
 }
 
 #display all  running service
@@ -76,43 +78,66 @@ display(){
 #only list the service that's states is running then it only display lines that>
   echo " "
   echo "=======================================  All Running Services  ======================================="
-  systemctl list-units --type=service --state=running | grep '.service' | awk '{print $1}'
+  systemctl list-units --type=service --state=running | grep '.service'
 }
 
 #start stop function
 startStop(){
-echo " "
-echo "=======================================  Start Or Stop Services ======================================="
-#asking for stop or start
-read -p "Would you like to start or stop a service (start or stop): " startOrStop
+  echo " "
+  echo "=======================================  Start Or Stop Services ======================================="
+  #asking for stop or start
+  read -p "Would you like to start or stop a service (start or stop): " startOrStop
 
-#asking for which  service
-read -p "Please enter a service you'd like to $startOrStop: " service
-
-#checking if the user entered start
-if [ "$startOrStop" == "start" ]; then
-  #double check if user want to start the service
-  read -p "Are you sure you want to start: $service? (y/n):  " answer
-    if [ "$answer" == "y" ]; then
-        #starting service
-        sudo systemctl start $service
-        confirmation $service
-   else
-        echo "$server will not start."
-   fi
-elif [ "$startOrStop" == "stop" ]; then
-  #double check if user wants to stop the service
-  read -p "Are you sure you want to stop: $service ? (y/n): " ans
-  if [ "$ans" == "y" ]; then
-        #stopping service
-        sudo systemctl stop $service
-        confirmation $service
-  else
-    echo "$service will not be stop"
+  if [ "$startOrStop" != "start" ] && [ "$startOrStop" != "stop" ]; then
+    echo "Invalid option. Please enter 'start' or 'stop'."
+    return 1
   fi
-else
-  echo "Invaild. Please re-enter: (start or stop)"
-fi
+
+  #asking for which  service
+  read -p "Please enter a service you'd like to $startOrStop: " service
+
+  # Check if service exists
+  if ! systemctl status "$service" &>/dev/null; then
+    echo "Service '$service' does not exist."
+    return 1
+  fi
+
+
+  if [ "$startOrStop" == "start" ]; then
+     while true; do
+  	#double check if user want to start the service
+  	read -p "Are you sure you want to start: $service? (y/n):  " answer
+
+	if [ "$answer" == "y" ]; then
+	   #starting service
+           sudo systemctl start "$service"
+           confirmation "$service"
+   	elif [ "$answer" == "n" ]; then
+           echo "$server will not start."
+   	else
+	   echo "Invalid Option"
+   	fi
+       break
+     done
+  elif [ "$startOrStop" == "stop" ]; then
+    while true; do
+  	#double check if user wants to stop the service
+  	read -p "Are you sure you want to stop: $service ? (y/n): " ans
+
+	if [ "$ans" == "y" ]; then
+	   #stopping service
+           sudo systemctl stop "$service"
+	   confirmation "$service"
+	elif [ "$ans" == "n" ]; then
+	    echo "$service will not be stop."
+  	else
+	    echo "Invalid option"
+   	fi
+       break
+     done
+  else
+    echo "Invalid. Please re-enter: (start or stop)"
+ fi
 }
 
 
@@ -144,7 +169,7 @@ while true;do
           exit 1
           ;;
         *)
-         echo "Invaild option"
+         echo "Invalid option"
         ;;
   esac
 done
@@ -161,8 +186,8 @@ createUser(){
   if id "$username" &>/dev/null; then
      echo "User already exists."
   else
-    sudo useradd -m $username
-    sudo passwd $username
+    sudo useradd "$username"
+    sudo passwd "$username"
     echo "A new user ($username) has been created."
   fi
 }
@@ -174,23 +199,26 @@ echo " "
 echo "============================ Grant Root Premission  ============================"
 #showing the user all the users sp they can pick
   echo "Here are a list of all users: "
-  formatOut=$(cut -d: -f1 /etc/passwd | pr -t -a -4)
+  formatOut=$(cat /etc/passwd | grep home | cut -d: -f1 | pr -t -a -4)
   echo "$formatOut"
 
   read -p "PLease enter a user you'd want to give root permission: " user
   #check if the user exists or not
   if id "$user" &>/dev/null;then
-    read -p "Are you sure you want to give $user root premisson? (y/n) " ans
-	if [ "$ans" == "y" ]; then 
+    while true; do
+	read -p "Are you sure you want to give $user sudo premisson? (y/n) " ans
+	if [ "$ans" == "y" ]; then
     	   #adding root perms to the user
-    	   sudo usermod -aG root $user
-	   echo "The user $user now has root permission."
+    	   sudo usermod -aG sudo "$user"
+	   echo "The user $user now has sudo permission."
 	 elif [ "$ans" == "n" ]; then
-	   echo "$user will not be given root permission."
+	   echo "$user will not be given sudo permission."
 	else
-	  echo "Invailed option."
+	  echo "Invalid option."
 	fi
-    else
+	return
+    done
+  else
     echo "The user $user does not exists"
 fi
 }
@@ -198,29 +226,31 @@ fi
 
 #Deleting a user
 deleteUser() {
-echo " "
-echo "============================  Deleting Users  ============================"
-#showing the user all the users so they can pick
+  echo " "
+  echo "============================  Deleting Users  ============================"
+  #showing the user all the users so they can pick
   echo "Here are a list of all users: "
-  formatOut=$(cut -d: -f1 /etc/passwd | pr -t -a -4)
+  formatOut=$(cat /etc/passwd | grep home | cut -d: -f1 | pr -t -a -4)
   echo "$formatOut"
 
-read -p "PLease enter a user you'd want to delete: " user
+
+  read -p "Please enter a user you'd want to delete: " user
   #check if the user exists or not
-  if id "$user" &>/dev/null;then
-  #double checking if they want to delete the user
-  read -p "Are you sure you want to delete the user: $user ?   (y/n): " answer
-    #id yes then delete the user
-    if [ "$answer" == "y" ]; then
-        sudo usermod -G "" $user #clearing the users secondary groups if any
-	sudo userdel $user
-       echo "$user has been deleted succesfully."
-    #if no do not delete the user
-    elif [ "$answer" == "n" ]; then
-       echo "$user will not be deleted."
-    else
-       echo "Invaild input."
-    fi
+  if id "$user" &>/dev/null; then
+    	#double checking if they want to delete the user
+    	read -p "Are you sure you want to delete the user: $user ?   (y/n): " answer
+
+	#id yes then delete the user
+	if [ "$answer" == "y" ]; then
+		sudo userdel "$user"
+       		echo "$user has been deleted succesfully."
+
+	#if no do not delete the user
+    	elif [ "$answer" == "n" ]; then
+        	echo "$user will not be deleted."
+    	else
+        	echo "Invalid input."
+    	fi
   else
     echo "$user doesn't exists."
   fi
@@ -228,9 +258,9 @@ read -p "PLease enter a user you'd want to delete: " user
 
 #display user
 displayUsers(){
-echo " "
-echo "============================  All Usesrs  ============================"
- who
+  echo " "
+  echo "============================  All Usesrs  ============================"
+  who
 }
 
 #disconnect a remote user
@@ -238,39 +268,33 @@ killRemote(){
   echo " "
   echo "==============================  Disconnecting Remote Users  =============================="
   echo "All remote user: "
-  who | grep tty | awk '{print $1,$2}'
+  who | grep pts | awk '{print $1,$2}'
 
   read -p "Which user do you want to disconnect: " user
 
 #checking if user exists
    if id "$user" &>/dev/null; then
-	#making user input the users tty
-        read -p "Please enter $user TTY: " tty
+	#making user input the users pts
+        read -p "Please enter $user pts: " pts
 
-        #gettting all tty for all users
-        allTTY=$(who | grep tty |awk '{print $2}')
-
-        #checking if the tty is vailded
-        if echo "$allTTY" | grep -qx "$tty" ; then
-	   #double checking if they want to disconncet the user
-            read -p "Are you sure you want to disconnect $user: (y/n) ? " ans
-                if [ "$ans" == "y" ]; then
-                    echo "$user disconnected."
-                    sudo pkill -HUP -t $tty
-                elif [ "$ans" == "n" ]; then
-                    echo "$user will not be disconnected."
-                else
-                    echo "Invaild option."
-                fi
-        else
-           echo "Invaild TTY."
-	   echo " "
-	   echo "All Remote User with their TTY: "
-           who | grep tty | awk '{print $1,$2}'
-
-        fi
-  else
-    echo "User does not exits."
+        #check if the  pts macths the user
+	userPTS=$(who | grep "$user" | awk '{print $2}')
+		if [ "$userPTS" == "$pts" ]; then
+		   #double checking if they want to disconncet the user
+    		   read -p "Are you sure you want to disconnect $user: (y/n) ? " ans
+                	if [ "$ans" == "y" ]; then
+            		    echo "$user disconnected."
+            		    sudo pkill -HUP -t "$pts"
+                	elif [ "$ans" == "n" ]; then
+                    	     echo "$user will not be disconnected."
+                	else
+                    	     echo "Invalid option."
+                	fi
+		else
+		  echo "The pts enter does not match $user pts."
+		fi
+    else
+      echo "User does not exists."
   fi
 }
 
@@ -289,11 +313,11 @@ echo "=======================  Groups Users  ================="
 
 #check if user exist
   if id "$user" &>/dev/null;then
-    echo "All groups $user are in: "
+    echo "All groups $user is in: "
     #getting all group then only displaying the name of the group
-    groups $user | cut -f2  -d:
+    groups "$user" | cut -f2 -d:
   else
-    echo "User does not exits."
+    echo "User does not exists."
   fi
 }
 
@@ -311,13 +335,13 @@ addGroup(){
   #ask user for which user
   read -p "Enter a the user you want to add to a group: " user
 
-   if id "$user" &>/dev/null;then
+   if id "$user" &>/dev/nuThe function begins by asking for a username and confirms that the account exists using id "$username" &>/dev/null. If the user is valid, it retrieves their home directory with getent passwd. It then displays the 10 oldest files in that directory by running ls -ltr, which sorts files by modification time in ascending order. It filters out directories using grep -v d, takes the first 10 results with head -n 10, and prints only the filenames using awk '{print $9}'. If the username does not exist, the function prints an error message.ll;then
       echo " " #spacing
       #show all groups
       echo "Here are a list of all groups: "
       formatOutput=$(cut -f1 -d":" /etc/group | pr -t -a -4)
       echo "$formatOutput"
-     echo " "
+      echo " "
 
       #ask user for group
       read -p "Enter a group you'd like the user to join: " group
@@ -328,12 +352,12 @@ addGroup(){
         read -p "Are you sure you want to add user $user to group: $group : (y/n) ? " ans
            #if yes add the user to the group if not do not
 	   if [ "$ans" == "y" ]; then
-                sudo usermod -aG $group $user
+                sudo usermod -aG "$group" "$user"
                 echo "$user has been added to $group group."
            elif [ "$ans" == "n" ]; then
                  echo "$user will not be added to the group."
            else
-                echo "Invaild option."
+                echo "Invalid option."
            fi
       else
         echo "$group does not exist."
@@ -360,7 +384,7 @@ removeGroup(){
 
   if id "$user" &>/dev/null;then
     #show the groups the are in
-    formatGroup=$(groups $user | cut -f2 -d:)
+    formatGroup=$(groups "$user" | cut -f2 -d:)
     echo "All groups $user is in: "
     echo "$formatGroup"
 
@@ -373,13 +397,13 @@ removeGroup(){
     	#double check if they want to remove the user
         read -p "Are you sure you want to remove $user from the $group : (y/n) ? " ans
            if [ "$ans" == "y" ]; then
-                sudo gpasswd -d $user $group
+                sudo gpasswd -d "$user" "$group"
                 echo "$user has been removed from $group."
 		return
            elif [ "$ans" == "n" ]; then
                  echo "$user will not be removed from the group."
            else
-                echo "Invaild option."
+                echo "Invalid option."
            fi
     else
         echo "$group does not exist."
@@ -418,10 +442,11 @@ groupSudo(){
           MainMenu
         ;;
 	5)
+	  echo "Ending program...."
 	  exit 1
 	;;
         *)
-         echo "Invaild option."
+         echo "Invalid option."
         ;;
   esac
 }
@@ -477,39 +502,47 @@ while true;do
          exit 1
         ;;
         *)
-          echo "Invaild option"
+          echo "Invalid option"
         ;;
   esac
 done
 }
 
 #---------------------------------------File Management--------------------------------------
-get_input(){
-#asking user for username and check if the user exist
-read -p "Enter an username: " username
-if id "$username" &>/dev/null;then
-#asking for the file name
-  read -p "Enter a filename: " fileName
-#make a varible and it uses the find command that will look in the /home/user directory and look for the file and give the path name
- file_path=$(find "/home/$username" -name $fileName)
-  #check if its not empty
-  if [ -n "$file_path" ];then
-	echo "$file_path"
+userAndFileCheck(){
+  #asking user for username and check if the user exist
+  read -p "Enter an username: " username
+
+  if id "$username" &>/dev/null;then
+    #geting the home home dict
+    User_Home=$(getent passwd "$username" | cut -d: -f6)
+
+    #asking for the file name
+    read -p "Enter a filename: " fileName
+
+    # search for the file inside the user's home directory
+    fileResult=$(sudo find "$User_Home" -name "$fileName" -print -quit 2>/dev/null)
+
+    #check if its not empty
+	if [[ -n "$fileResult" ]]; then
+   	   echo "Path: $fileResult"
+	else
+	   echo "File not found."
+	fi
   else
-  	echo "File not found."
+     echo "User does not exist."
+     return 1
   fi
-else
-  echo "User does not exist."
-  return 1
-fi
 }
+
 
 
 display_large(){
   read -p "Enter a username: " username
   if id "$username" &>/dev/null; then
-    echo "==========================  10 Oldest File  =========================="
-    sudo ls -l /home/$username | awk ' {print $5,$9} ' | sort -n |cut -f2 -d" " |  tail
+    User_Home=$(getent passwd "$username" | cut -d: -f6)
+    echo "==========================  10 Largest File  =========================="
+    sudo ls -lSh "$User_Home" | grep -v d | head -n 10 | awk '{print $9}'
   else
     echo "User does not exist."
   fi
@@ -520,8 +553,11 @@ display_old(){
   read -p "Enter a username: " username
   #checking
   if id "$username" &>/dev/null; then
+     #get the user's home directory
+     User_Home=$(getent passwd "$username" | cut -d: -f6)
     echo "==========================  10 Oldest File  =========================="
-    sudo ls -l -t /home/$username | tail | awk '{print $9}'
+    #get the oldest file with ls -ltr. t sort by time and r, reverse the order so the oldest are on the top
+    sudo ls -ltr "$User_Home" | grep -v d | head -n 10 | awk '{print $9}'
   else
     echo "User does not exist."
   fi
@@ -534,7 +570,7 @@ while true; do
   echo "=======================================  File Management ======================================="
   echo " "
   echo "1) Check username and file existes"
-  echo "2) Display the 10 largest files in home directorey"
+  echo "2) Display the 10 largest files in a user's home directorey"
   echo "3) Diplay the 10 oldest files in a user's home directory"
   echo "4) Back to Main Menu"
   echo "5) End Program"
@@ -543,7 +579,7 @@ while true; do
 
   case $opt in
 	1)
-	  get_input
+	  userAndFileCheck
 	;;
 	2)
 	  display_large
