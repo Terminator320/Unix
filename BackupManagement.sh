@@ -1,12 +1,34 @@
 backupSchedule(){
+mkdir backup 
 echo "======================== Backup Schedule ========================"
-read -p "Enter the date (ex. Monday, Tuesday): " date
-read -p "Enter the time (ex. 04:00 or 15:00): " time
+read -p "Enter the date (ex. sun, mon, tue, wed, thu, fri, sat): " day
+read -p "Enter the time (0-23): " time
 read -p "Enter the file name you want to backup: " filename
 read -p "Enter the destination folder: " dest
 
-echo "$time $date backup $filename --> $dest" > lastBackup.txt
-echo "Your backup has been scheduled for every $date at $time"
+case $day in 
+	sun) dayNum=0;;
+	mon) dayNum=1;;
+	tue) dayNum=2;;
+	wed) dayNum=3;;
+	thu) dayNum=4;;
+	fri) dayNum=5;;
+	sat) dayNum=6;;
+	*) echo "Invalid day." return;;
+esac
+
+mkdir -p "$dest"
+
+
+#Converting to absolute path
+filename="$(readlink -f"$filename")"
+dest="$(readlink -f "$dest")"
+
+#use cron command
+(crontab -l 2>/dev/null; echo "0 $time * * $dayNum /usr/bin/tar -cf $dest/backup.tar $filename") | crontab -
+
+echo "$time:00 $day backup $filename --> $dest" > lastBackup.txt
+echo "Your backup has been scheduled for every $day at $time:00"
 echo "File: $filename"
 echo "Destination: $dest"
 }
@@ -15,7 +37,7 @@ echo "Destination: $dest"
 lastBackup(){
 echo " "
 echo "======================== Last Backup Info ========================"
-if [-f lastBackup.txt]; then
+if [ -f lastBackup.txt ]; then
 	echo "Last backup: "
 	cat lastBackup.txt
 else
