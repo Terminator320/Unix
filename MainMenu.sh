@@ -14,7 +14,7 @@ while true; do
   read -p "Select an option [1-7]: " opt
   case $opt in
 	1)
-	  echo "In development"
+	  SystemStatus
 	;;
 	2)
 	  BackupManagement
@@ -45,7 +45,81 @@ done
 
 
 #--------------------------------System Status----------------------------------------
+getMemoryInfo(){
+total=$(free -h | awk 'NR==2 {print $2}')
+used=$(free -h | awk 'NR==2 {print $3}')
+available=$(free -h | awk 'NR==2 {print $7}')
+echo "The total memory is $total and $used is used. There is $available of memory available."
+}
+temperatureCheck(){
+TEMP=$(cat /sys/class/thermal/thermal_zone0/temp)
+TEMPC=$((TEMP / 1000))
 
+if [ $TEMPC -gt 70 ]
+then
+echo "The temperature of the CPU reached 70C or more. $TEMPC"
+else
+echo "The temperature is normal  $TEMPC"
+fi
+}
+
+listActive(){
+sudo apt update
+sudo apt install htop
+
+htop
+
+}
+
+killProcess(){
+ps -aux
+read -p "Which process do you want to kill. Use the PID to kill it." killID
+if sudo kill -0 $killID >/dev/null; then
+echo "Killed the procress"
+else
+echo "Could not kill it for some reason."
+fi
+
+}
+SystemStatus(){
+while true;do
+  echo " "
+  echo "=======================================  Service Management ======================================="
+  echo "1) Display detailed information about memory usage."
+  echo "2) Check the CPU Temperature"
+  echo "3) List all active program"
+  echo "4) Let the user stop or end a specific process."
+  echo "5) Back to main menu"
+  echo "6) Exit the program"
+  read -p "Select an option [1-4]: " option
+
+  case $option in
+         1) 
+         getMemoryInfo
+         ;;
+         2)
+         temperatureCheck
+         ;;
+         3)
+          listActive
+         ;;
+         4)
+          killProcess
+         ;;
+         5)
+          echo "Returning to Main Menu"
+          MainMenu
+         ;;
+         6)
+          echo "Exiting the program..."
+          exit 1
+          ;;
+        *)
+         echo "Invalid option"
+        ;;
+  esac
+done
+}
 
 
 #--------------------------------Backup Management-----------------------------------
