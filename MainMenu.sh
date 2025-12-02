@@ -97,11 +97,10 @@ startStop(){
   read -p "Please enter a service you'd like to $startOrStop: " service
 
   # Check if service exists
-  if ! systemctl status "$service" &>/dev/null; then
-    echo "Service '$service' does not exist."
-    return 1
+  if ! systemctl show "$service" &>/dev/null; then
+	echo "Service '$service' does not exist."
+	return 1
   fi
-
 
   if [ "$startOrStop" == "start" ]; then
      while true; do
@@ -335,7 +334,7 @@ addGroup(){
   #ask user for which user
   read -p "Enter a the user you want to add to a group: " user
 
-   if id "$user" &>/dev/nul; then
+   if id "$user" &>/dev/null; then
       echo " " #spacing
       #show all groups
       echo "Here are a list of all groups: "
@@ -347,7 +346,7 @@ addGroup(){
       read -p "Enter a group you'd like the user to join: " group
 
       #check if group exists
-      if getent group "$group" >/dev/null 2>&1; then
+      if getent group "$group" &>/dev/null 2>&1; then
    	#double checking
         read -p "Are you sure you want to add user $user to group: $group : (y/n) ? " ans
            #if yes add the user to the group if not do not
@@ -392,7 +391,7 @@ removeGroup(){
     read -p "Select the group you want to remove $user from: " group
 
      #check if group exists
-     if getent group "$group" >/dev/null 2>&1; then
+     if getent group "$group" &>/dev/null 2>&1; then
 
     	#double check if they want to remove the user
         read -p "Are you sure you want to remove $user from the $group : (y/n) ? " ans
@@ -417,7 +416,7 @@ removeGroup(){
 #change a user's group membership
 groupSudo(){
  echo " "
- echo "====================================  Change a user’s group membership ====================================="
+ echo "================================  Change a user’s group membership ================================="
  echo "1) Add to a new group"
  echo "2) Remove from a group"
  echo "3) Back to user management"
@@ -510,7 +509,8 @@ done
 
 #---------------------------------------File Management--------------------------------------
 userAndFileCheck(){
-  #asking user for username and check if the user exist
+  echo "======================  File check  ==========================="
+   #asking user for username and check if the user exist
   read -p "Enter an username: " username
 
   if id "$username" &>/dev/null;then
