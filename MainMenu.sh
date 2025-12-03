@@ -20,7 +20,7 @@ while true; do
 	  BackupManagement
 	;;
 	3)
-	  echo "In development"
+	  NetworkManagement
 	;;
 	4)
 	  Server_Management
@@ -123,12 +123,173 @@ done
 
 
 #--------------------------------Backup Management-----------------------------------
+backupSchedule(){
+mkdir -p backup
+echo "======================== Backup Schedule ========================"
+read -p "Enter the date (ex. sun, mon, tue, wed, thu, fri, sat): " day
+read -p "Enter the time (0-23): " time
+read -p "Enter the file name you want to backup: " filename
+read -p "Enter the destination folder: " dest
 
+case $day in
+	sun) dayNum=0;;
+	mon) dayNum=1;;
+	tue) dayNum=2;;
+	wed) dayNum=3;;
+	thu) dayNum=4;;
+	fri) dayNum=5;;
+	sat) dayNum=6;;
+	*) echo "Invalid day." return;;
+esac
+
+mkdir -p "$dest"
+
+
+#Converting to absolute path
+filename="$(readlink -f "$filename")"
+dest="$(readlink -f "$dest")"
+
+#use cron command
+(crontab -l 2>/dev/null; echo "0 $time * * $dayNum /usr/bin/tar -cf $dest/backup.tar $filename") | crontab -
+
+echo "$time:00 $day backup $filename --> $dest" > lastBackup.txt
+echo "Your backup has been scheduled for every $day at $time:00"
+echo "File: $filename"
+echo "Destination: $dest"
+}
+
+
+lastBackup(){
+echo " "
+echo "======================== Last Backup Info ========================"
+if [ -f lastBackup.txt ]; then
+	echo "Last backup: "
+	cat lastBackup.txt
+else
+	echo "No backup has been made yet."
+fi
+}
+
+
+BackupManagement(){
+while true; do
+	echo " "
+	echo "===================== Backup Management ====================="
+	echo "1) Create a backup schedule"
+	echo "2) Display last backup information"
+	echo "3) Return to Main Menu"
+	echo "4) Exit Program"
+
+	read -p "Select an option [1-4]: " option
+	case $option in
+		1)
+		backupSchedule
+		;;
+		2)
+		lastBackup
+		;;
+		3)
+		echo "Returning to Main Menu"
+		MainMenu
+		;;
+		4)
+		echo "Ending program..."
+		exit 1
+		;;
+		*)
+		echo "Invalid option"
+		;;
+esac
+done
+}
 
 
 #-------------------------------Network Management------------------------------------
 
+displayInterfaces(){
+echo " "
+	echo "==================== Network Interfaces and IPs ===================="
 
+	for interface in $(ls /sys/class/net/); do
+		ip_address=$(ip -o -4 addr show $interface | awk '{print $4}')
+		if [ -n "$ip_address" ]; then
+			echo "Interface: $interface, IP Address: $ip_address"
+		else
+			echo "Interface: $interface, No IP Address assigned"
+		fi
+	done
+}
+
+toggleInterfaces(){
+	echo " "
+	echo "==================== Enable and Disable Interface ===================="
+	read -p "Enter interface name: " interface
+	read -p "Would you like to enable (1) or disable (2) this interface?: " input
+
+	case $input in
+		1)
+		sudo ip link set $interface up
+		echo "$interface has been enabled";;
+		2)
+		sudo ip link set $interface down
+		echo "$interface has been disabled";;
+		*)
+		echo "Invalid option";;
+	esac
+}
+
+setIPAddress(){
+	echo " "
+	echo "==================== Assign IP Address ====================="
+
+	read -p "Enter interface name: " interface
+	read -p "Enter IP Address: " ip_num
+
+	sudo ip addr add $ip_num dev $interface
+	echo "IP Adress $ip_num has been assigned to $interface"
+}
+
+listWifi(){
+	echo " "
+	echo "===================== Available WiFi Networks ===================="
+
+	sudo nmcli dev wifi
+	read -p "Enter Wifi name you want to connect to: " wifi
+	read -p "Enter password: " pwd
+
+	sudo nmcli dev wifi connect "$wifi" password "$pwd"
+	echo "Connecting to $wifi..."
+}
+
+
+NetworkManagement(){
+	while true; do
+		echo " "
+		echo "==================== Network Management ===================="
+		echo "1) Display all network interfaces and IP addresses"
+		echo "2) Enable or Disable a network interface"
+		echo "3) Assign IP address to an interface"
+		echo "4) Display Wifi networks and connect"
+		echo "5) Return to Main Menu"
+		echo "6) Exit program"
+		echo " "
+
+		read -p "Select an option (1-6): " option
+
+		case $option in 
+			1) displayInterfaces;;
+			2) toggleInterfaces;;
+			3) setIPAddress;;
+			4) listWifi;;
+			5) MainMenu;;
+			6) 
+			echo "Ending program..."
+			exit 1;;
+			*)
+			echo "Invalid option";;
+		esac
+done
+}
 
 
 

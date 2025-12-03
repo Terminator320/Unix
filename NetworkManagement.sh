@@ -32,7 +32,7 @@ toggleInterfaces(){
 
 setIPAddress(){
 	echo " "
-	echo "==================== Available Wi-Fi Networks ====================="
+	echo "==================== Assign IP Address ====================="
 
 	read -p "Enter interface name: " interface
 	read -p "Enter IP Address: " ip_num

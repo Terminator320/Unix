@@ -1,12 +1,12 @@
 backupSchedule(){
-mkdir backup 
+mkdir -p backup
 echo "======================== Backup Schedule ========================"
 read -p "Enter the date (ex. sun, mon, tue, wed, thu, fri, sat): " day
 read -p "Enter the time (0-23): " time
 read -p "Enter the file name you want to backup: " filename
 read -p "Enter the destination folder: " dest
 
-case $day in 
+case $day in
 	sun) dayNum=0;;
 	mon) dayNum=1;;
 	tue) dayNum=2;;
@@ -21,7 +21,7 @@ mkdir -p "$dest"
 
 
 #Converting to absolute path
-filename="$(readlink -f"$filename")"
+filename="$(readlink -f "$filename")"
 dest="$(readlink -f "$dest")"
 
 #use cron command
