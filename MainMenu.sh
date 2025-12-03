@@ -1,12 +1,12 @@
 #main menu
 MainMenu(){
 while true; do
-  echo "=======================================  Main Menu  ======================================="
+  echo -e "\e[37m=======================================  Main Menu  =======================================\e[0m"
   echo " "
-  echo "1) System Status"
-  echo "2) Backup Management"
-  echo "3) Network Management"
-  echo "4) Service Management"
+  echo -e "\e[36m 1) System Status\e[0m"
+  echo -e "\e[35m 2) Backup Management\e[0m"
+  echo -e "\e[33m 3) Network Management\e[0m"
+  echo -e "\e[1;34m 4) Service Management\e[0m"
   echo "5) User Management"
   echo "6) File Management"
   echo "7) Exit Program"
