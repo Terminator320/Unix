@@ -3,15 +3,16 @@ MainMenu(){
 while true; do
   echo -e "\e[37m=======================================  Main Menu  =======================================\e[0m"
   echo " "
-  echo -e "\e[36m 1) System Status\e[0m"
-  echo -e "\e[35m 2) Backup Management\e[0m"
-  echo -e "\e[33m 3) Network Management\e[0m"
+  echo -e "\e[1;36m 1) System Status\e[0m"
+  echo -e "\e[1;35m 2) Backup Management\e[0m"
+  echo -e "\e[1;33m 3) Network Management\e[0m"
   echo -e "\e[1;34m 4) Service Management\e[0m"
-  echo "5) User Management"
-  echo "6) File Management"
-  echo "7) Exit Program"
+  echo -e "\e[1;30m 5) User Management\e[0m"
+  echo -e "\e[1;37m 6) File Management\e[0m"
+  echo -e "\e[1;31m 7) Exit Program\e[0m"
 
   read -p "Select an option [1-7]: " opt
+
   case $opt in
 	1)
 	  SystemStatus
@@ -32,11 +33,11 @@ while true; do
 	  FileManagement
 	;;
 	7)
-	  echo "Ending program..................."
+	  echo -e "\e[1;31mEnding program...................\e[0m"
 	  exit 1
 	;;
 	*)
-	  echo "Invalid option"
+	  echo -e "\e[1;31mInvalid Option\e[0m"
 	;;
   esac
 done
@@ -84,7 +85,7 @@ fi
 SystemStatus(){
 while true;do
   echo " "
-  echo "=======================================  Service Management ======================================="
+  echo "=======================================  System Management ======================================="
   echo "1) Display detailed information about memory usage."
   echo "2) Check the CPU Temperature"
   echo "3) List all active program"
@@ -292,7 +293,6 @@ done
 }
 
 
-
 #------------------------------Service Management--------------------------------------
 #checking function
 confirmation(){
@@ -301,10 +301,10 @@ confirmation(){
 
   #if its active user has started it
   if [ "$check" == "active" ];then
-     echo "You have started $1"
+     echo -e "\e[1;32mYou have started $1\e[0m"
   #if its not active then user hasn't stop it
   else
-    echo "You have stopped $1"
+    echo -e "\e[1;31mYou have stopped $1\e[0m"
   fi
 }
 
@@ -312,19 +312,19 @@ confirmation(){
 display(){
 #only list the service that's states is running then it only display lines that>
   echo " "
-  echo "=======================================  All Running Services  ======================================="
+  echo -e "\e[1;36m=======================================  All Running Services  =======================================\e[0m"
   systemctl list-units --type=service --state=running | grep '.service'
 }
 
 #start stop function
 startStop(){
   echo " "
-  echo "=======================================  Start Or Stop Services ======================================="
+  echo -e "\e[1;33m=======================================  Start Or Stop Services =======================================\e[0m"
   #asking for stop or start
   read -p "Would you like to start or stop a service (start or stop): " startOrStop
 
   if [ "$startOrStop" != "start" ] && [ "$startOrStop" != "stop" ]; then
-    echo "Invalid option. Please enter 'start' or 'stop'."
+    echo -e "\e[1;31mInvalid option. Please enter 'start' or 'stop'.\e[0m"
     return 1
   fi
 
@@ -333,7 +333,7 @@ startStop(){
 
   # Check if service exists
   if ! systemctl show "$service" &>/dev/null; then
-	echo "Service '$service' does not exist."
+	echo -e "\e[1;31mService '$service' does not exist.\e[0m"
 	return 1
   fi
 
@@ -347,9 +347,9 @@ startStop(){
            sudo systemctl start "$service"
            confirmation "$service"
    	elif [ "$answer" == "n" ]; then
-           echo "$server will not start."
+           echo -e "\e[1;31m$server will not start.\e[0m"
    	else
-	   echo "Invalid Option"
+	   echo -e "\e[1;31mInvalid Option\e[0m"
    	fi
        break
      done
@@ -363,27 +363,27 @@ startStop(){
            sudo systemctl stop "$service"
 	   confirmation "$service"
 	elif [ "$ans" == "n" ]; then
-	    echo "$service will not be stop."
+	    echo -e "\e[1;31m$service will not be stop.\e[0m"
   	else
-	    echo "Invalid option"
+	    echo -e "\e[1;31mInvalid option\e[0m"
    	fi
        break
      done
   else
-    echo "Invalid. Please re-enter: (start or stop)"
+    echo -e "\e[1;31mInvalid. Please re-enter: (start or stop) \e[0m"
  fi
 }
 
 
-#Server management menu
+#Service management menu
 Server_Management(){
 while true;do
   echo " "
-  echo "=======================================  Service Management ======================================="
-  echo "1) View all Running Services."
-  echo "2) Start and Stop Services."
-  echo "3) Return to Main Menu."
-  echo "4) Exit the Program."
+  echo -e "\e[1;34m=======================================  Service Management =======================================\e[0m"
+  echo -e "\e[1;36m 1) View all Running Services.\e[0m"
+  echo -e "\e[1;33m 2) Start and Stop Services.\e[0m"
+  echo -e "\e[1;37m 3) Return to Main Menu.\e[0m"
+  echo -e "\e[1;31m 4) Exit the Program.\e[0m"
 
   read -p "Select an option [1-4]: " option
 
@@ -399,11 +399,11 @@ while true;do
 	  MainMenu
 	 ;;
          4)
-          echo "Exiting the program..."
+          echo -e "\e[1;31mExiting the program...\e[0m"
           exit 1
           ;;
         *)
-         echo "Invalid option"
+         echo -e "\e[1;31mInvalid option\e[0m"
         ;;
   esac
 done
@@ -413,16 +413,16 @@ done
 #create new user
 createUser(){
   echo " "
-  echo "============================  Creating Users  ============================"
+  echo -e "\e[1;92m============================  Creating Users  ============================\e[0m"
   read -p "Enter a username: " username
 
   #check if the user exists
   if id "$username" &>/dev/null; then
-     echo "User already exists."
+     echo -e "\e[1;31mUser already exists.\e[0m"
   else
     sudo useradd "$username"
     sudo passwd "$username"
-    echo "A new user ($username) has been created."
+    echo -e "\e[1;32mA new user ($username) has been created.\e[0m"
   fi
 }
 
@@ -430,7 +430,7 @@ createUser(){
 #root permission
 rootPerm(){
 echo " "
-echo "============================ Grant Root Premission  ============================"
+echo -e "\e[1;91m============================  Grant Root Premission  ============================\e[0m"
 #showing the user all the users sp they can pick
   echo "Here are a list of all users: "
   formatOut=$(cat /etc/passwd | grep home | cut -d: -f1 | pr -t -a -4)
@@ -444,16 +444,16 @@ echo "============================ Grant Root Premission  ======================
 	if [ "$ans" == "y" ]; then
     	   #adding root perms to the user
     	   sudo usermod -aG sudo "$user"
-	   echo "The user $user now has sudo permission."
+	   echo -e "\e[1;32mThe user $user now has sudo permission.\e[0m"
 	 elif [ "$ans" == "n" ]; then
-	   echo "$user will not be given sudo permission."
+	   echo -e "\e[1;32m'$user' will not be given sudo permission.\e[0m"
 	else
-	  echo "Invalid option."
+	  echo -e "\e[1;31mInvalid option.\e[0m"
 	fi
 	return
     done
   else
-    echo "The user $user does not exists"
+    echo -e "\e[1;31mThe user $user does not exists\e[0m"
 fi
 }
 
@@ -461,7 +461,7 @@ fi
 #Deleting a user
 deleteUser() {
   echo " "
-  echo "============================  Deleting Users  ============================"
+  echo -e "\e[1;94m============================  Deleting Users  ============================\e[0m"
   #showing the user all the users so they can pick
   echo "Here are a list of all users: "
   formatOut=$(cat /etc/passwd | grep home | cut -d: -f1 | pr -t -a -4)
@@ -477,30 +477,30 @@ deleteUser() {
 	#id yes then delete the user
 	if [ "$answer" == "y" ]; then
 		sudo userdel "$user"
-       		echo "$user has been deleted succesfully."
+       		echo -e "/e[1;32m$user has been deleted succesfully.\e[0m"
 
 	#if no do not delete the user
     	elif [ "$answer" == "n" ]; then
-        	echo "$user will not be deleted."
+        	echo -e "\e[1;32m'$user' will not be deleted.\e[0m"
     	else
-        	echo "Invalid input."
+        	echo -e "\e[1;31mInvalid input.\e[0m"
     	fi
   else
-    echo "$user doesn't exists."
+    echo -e "\e[1;31m'$user' doesn't exists.\e[0m"
   fi
 }
 
 #display user
 displayUsers(){
   echo " "
-  echo "============================  All Usesrs  ============================"
+  echo -e "\e[1;95m============================  All Usesrs  ============================\e[0m"
   who
 }
 
 #disconnect a remote user
 killRemote(){
   echo " "
-  echo "==============================  Disconnecting Remote Users  =============================="
+  echo "\e[1;96m==============================  Disconnecting Remote Users  ==============================\e[0m"
   echo "All remote user: "
   who | grep pts | awk '{print $1,$2}'
 
@@ -517,18 +517,18 @@ killRemote(){
 		   #double checking if they want to disconncet the user
     		   read -p "Are you sure you want to disconnect $user: (y/n) ? " ans
                 	if [ "$ans" == "y" ]; then
-            		    echo "$user disconnected."
+            		    echo -e "\e[1;32m'$user' disconnected.\e[0m"
             		    sudo pkill -HUP -t "$pts"
                 	elif [ "$ans" == "n" ]; then
-                    	     echo "$user will not be disconnected."
+                    	     echo -e "\e[1;32m'$user' will not be disconnected.\e[0m"
                 	else
-                    	     echo "Invalid option."
+                    	     echo -e "\e[1;32mInvalid option\e[0m."
                 	fi
 		else
-		  echo "The pts enter does not match $user pts."
+		  echo -e "/e[1;31mThe pts enter does not match $user pts.\e[0m"
 		fi
     else
-      echo "User does not exists."
+      echo -e "\e[1;31mUser does not exists.\e[0m"
   fi
 }
 
@@ -691,8 +691,8 @@ groupSudo(){
 UserManagement(){
 while true;do
   echo " "
-  echo "=======================================  User Management ======================================="
-  echo "1) Add a user"
+  echo -e "\e[1;30m=======================================  User Management =======================================\e[0m"
+  echo -e "\e[1;92m1) Add a user\e[0m"
   echo "2) Grant root permission to a user"
   echo "3) Delete a user"
   echo "4) Display connected user"
