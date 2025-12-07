@@ -51,7 +51,7 @@ getMemoryInfo(){
 total=$(free -h | awk 'NR==2 {print $2}')
 used=$(free -h | awk 'NR==2 {print $3}')
 available=$(free -h | awk 'NR==2 {print $7}')
-echo "The total memory is $total and $used is used. There is $available of memory available."
+echo -e "\e[1;36mThe total memory is $total and $used is used. There is $available of memory available\e[0m"
 }
 temperatureCheck(){
 TEMP=$(cat /sys/class/thermal/thermal_zone0/temp)
@@ -59,9 +59,9 @@ TEMPC=$((TEMP / 1000))
 
 if [ $TEMPC -gt 70 ]
 then
-echo "The temperature of the CPU reached 70C or more. $TEMPC"
+echo -e  "\e[1;31mThe temperature of the CPU reached 70C or more. $TEMPC\e[0m"
 else
-echo "The temperature is normal  $TEMPC"
+echo -e "\e[1;36mThe temperature is normal  $TEMPC\e[0m"
 fi
 }
 
@@ -77,16 +77,16 @@ killProcess(){
 ps -aux
 read -p "Which process do you want to kill. Use the PID to kill it." killID
 if sudo kill -0 $killID >/dev/null; then
-echo "Killed the procress"
+echo -e  "\e[1;32mKilled the process\e[0m"
 else
-echo "Could not kill it for some reason."
+echo -e "\e[1;31mCould not kill it for some reason.\e[0m"
 fi
 
 }
 SystemStatus(){
 while true;do
   echo " "
-  echo "=======================================  System Management ======================================="
+  echo -e "\e[1;36m=======================================  System Management =======================================\e[0m"
   echo "1) Display detailed information about memory usage."
   echo "2) Check the CPU Temperature"
   echo "3) List all active program"
