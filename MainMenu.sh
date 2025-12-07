@@ -141,7 +141,8 @@ case $day in
 	thu) dayNum=4;;
 	fri) dayNum=5;;
 	sat) dayNum=6;;
-	*) echo "Invalid day." return;;
+	*) echo -e "\e[1;31mInvalid Option\e[0m"
+	return;;
 esac
 
 mkdir -p "$dest"
@@ -176,7 +177,7 @@ fi
 BackupManagement(){
 while true; do
 	echo " "
-	echo "===================== Backup Management ====================="
+	echo -e "\e[1;35m ===================== Backup Management =====================\e[0m"
 	echo "1) Create a backup schedule"
 	echo "2) Display last backup information"
 	echo "3) Return to Main Menu"
@@ -195,11 +196,11 @@ while true; do
 		MainMenu
 		;;
 		4)
-		echo "Ending program..."
+		echo -e "\e[1;31mEnding program...................\e[0m"
 		exit 1
 		;;
 		*)
-		echo "Invalid option"
+		echo -e "\e[1;31mInvalid Option\e[0m"
 		;;
 esac
 done
@@ -236,7 +237,7 @@ toggleInterfaces(){
 		sudo ip link set $interface down
 		echo "$interface has been disabled";;
 		*)
-		echo "Invalid option";;
+		echo -e "\e[1;31mInvalid Option\e[0m"
 	esac
 }
 
@@ -267,7 +268,7 @@ listWifi(){
 NetworkManagement(){
 	while true; do
 		echo " "
-		echo "==================== Network Management ===================="
+		echo -e "\e[1;33m==================== Network Management ====================\e[0m"
 		echo "1) Display all network interfaces and IP addresses"
 		echo "2) Enable or Disable a network interface"
 		echo "3) Assign IP address to an interface"
@@ -285,10 +286,10 @@ NetworkManagement(){
 			4) listWifi;;
 			5) MainMenu;;
 			6) 
-			echo "Ending program..."
+			echo -e "\e[1;31mEnding program...................\e[0m"
 			exit 1;;
 			*)
-			echo "Invalid option";;
+			echo -e "\e[1;31mInvalid Option\e[0m"
 		esac
 done
 }
